@@ -1,0 +1,15 @@
+<zk>
+
+	<zscript><![CDATA[
+		
+		ArrayList list = new ArrayList();
+		for(int i = 0 ; i < 100 ;++i){
+			list.add("test item " + i);
+		}
+		ListModelList models = new ListModelList(list);
+		]]></zscript>
+
+	<modeltable renderer="org.zkoss.modeltable.test.ModelTableRender" model="${models}" />
+	
+	
+</zk>
