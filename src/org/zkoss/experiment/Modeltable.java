@@ -3,22 +3,20 @@ package org.zkoss.experiment;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
+import org.zkoss.experiment.model.ModelTag;
 import org.zkoss.json.JSONArray;
 import org.zkoss.lang.Classes;
 import org.zkoss.lang.Objects;
 import org.zkoss.zk.ui.Component;
+import org.zkoss.zk.ui.HtmlBasedComponent;
 import org.zkoss.zul.ListModel;
-import org.zkoss.zul.impl.XulElement;
 
-public class Modeltable extends XulElement {
-
-	/* Here's a simple example for how to implements a member field */
+public class Modeltable extends HtmlBasedComponent {
 
 	private TableItemRenderer _render;
 
-	private final static String COMPONENT_VARIABLE = "$#_wgt_#$";
 	private ListModel _model;
-	
+
 	private transient ListDataNotifyListener _dataListener;
 
 	public TableItemRenderer getRender() {
@@ -30,21 +28,21 @@ public class Modeltable extends XulElement {
 	}
 
 	public void setModel(ListModel model) {
-        if (model != null) {
-            if (_model != model) {
-            	//ListDataNotifyListener
-                    if (_model != null) {
-                            _model.removeListDataListener(_dataListener);
-                    }
-                    _model = model;
-                    _dataListener = new ListDataNotifyListener(this);
-                    _dataListener.notifyTarget();
-	            }
-	    } else if (_model != null) {
-	            _model.removeListDataListener(_dataListener);
-	            _model = null;
-	            invalidate();
-	    }
+		if (model != null) {
+			if (_model != model) {
+				// ListDataNotifyListener
+				if (_model != null) {
+					_model.removeListDataListener(_dataListener);
+				}
+				_model = model;
+				_dataListener = new ListDataNotifyListener(this);
+				_dataListener.notifyTarget();
+			}
+		} else if (_model != null) {
+			_model.removeListDataListener(_dataListener);
+			_model = null;
+			invalidate();
+		}
 	}
 
 	// super//
@@ -54,13 +52,6 @@ public class Modeltable extends XulElement {
 		render(renderer, "headers", evaluteRenderHeader(this, getRender()));
 		render(renderer, "items", evaluteRenderItem(this, getRender(), _model));
 
-	}
-
-	/**
-	 * The default zclass is "z-modeltable"
-	 */
-	public String getZclass() {
-		return (this._zclass != null ? this._zclass : "z-modeltable");
 	}
 
 	public Object getRenderer() {
@@ -74,11 +65,13 @@ public class Modeltable extends XulElement {
 	}
 
 	private static final TableItemRenderer _defRend = new TableItemRenderer() {
-		public void renderHeader(List row) {
+
+		public void renderHeader(org.zkoss.experiment.model.api.ModelRow row) {
 			
 		}
-		public void renderItem(List row, Object model) {
-			row.add(Objects.toString(model));
+
+		public void renderItem(org.zkoss.experiment.model.api.ModelRow row, Object model) {
+			row.appendCell(Objects.toString(model));
 		}
 	};
 
@@ -86,35 +79,36 @@ public class Modeltable extends XulElement {
 		return _defRend;
 	}
 
-
 	private Object evaluteRenderHeader(Component target, TableItemRenderer renderer) {
-		if (_model == null) {
+		if (_model == null) 
 			return new JSONArray();
-		}
 
-		JSONArray list = new JSONArray();
+		ModelTag list = new ModelTag("tr", "th");
 		renderer.renderHeader(list);
+		List comps = list.getComponents();
+		for (int j = 0; j < comps.size(); ++j) {
+			Component item = (Component) comps.get(j);
+			this.appendChild((Component) item);
+		}
 		return list;
 	}
-	
+
 	private Object evaluteRenderItem(Component target, TableItemRenderer renderer, ListModel _model) {
 		if (_model == null) {
-			return new JSONArray();
+			return null;
 		}
 
 		JSONArray list = new JSONArray();
 
 		for (int i = 0; i < _model.getSize(); ++i) {
-			JSONArray row = new JSONArray();
-			renderer.renderItem(row, _model.getElementAt(i));
-			for(int j = 0 ; j < row.size() ; ++j ){
-				Object item = row.get(j);
-				if( item instanceof Component){
-					row.set(j,COMPONENT_VARIABLE);
-					this.appendChild( (Component) item);
-				}
+			ModelTag tag = new ModelTag("tr", "td");
+			renderer.renderItem(tag, _model.getElementAt(i));
+			List comps = tag.getComponents();
+			for (int j = 0; j < comps.size(); ++j) {
+				Component item = (Component) comps.get(j);
+				this.appendChild((Component) item);
 			}
-			list.add(row);
+			list.add(tag);
 		}
 
 		return list;

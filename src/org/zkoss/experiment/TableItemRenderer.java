@@ -1,12 +1,13 @@
 package org.zkoss.experiment;
 
-import java.util.List;
+import org.zkoss.experiment.model.api.ModelRow;
+
 
 
 public interface TableItemRenderer {
 	
-	public void renderHeader(List row);
+	public void renderHeader(ModelRow row);
 	
-	public void renderItem(List row,Object model);
+	public void renderItem(ModelRow row, Object model);
 	
 }
